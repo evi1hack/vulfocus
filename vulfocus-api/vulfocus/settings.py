@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import docker
 import datetime
+import redis
+from django.core.management import utils
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,16 +24,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'v!bz(7o_5u_4m-m7dgl-&-%81018li0u2)923fd)sp-pw%=c()'
+try:
+    SECRET_KEY = os.environ['SECRET_KEY']
+except:
+    SECRET_KEY = utils.get_random_secret_key()
+    os.environ['SECRET_KEY'] = SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL = "user.UserProfile"
 
 # Application definition
+ALLOWED_IMG_SUFFIX = ["jpg", "jpeg", "png"]
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static")
+]
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -43,7 +54,29 @@ INSTALLED_APPS = [
     'user',
     'corsheaders',
     'dockerapi',
+    'network',
+    'tasks',
+    'layout_image'
 ]
+
+# redis host
+REDIS_HOST = "127.0.0.1"
+# redis port
+REDIS_PORT = 6379
+# redis pass
+REDIS_PASS = ""
+if REDIS_PASS:
+    CELERY_BROKER_URL = "redis://:%s@%s:%s/0" % (REDIS_PASS, str(REDIS_HOST), str(REDIS_PORT))
+    REDIS_POOL = redis.ConnectionPool(host=REDIS_HOST, port=int(REDIS_PORT), password=REDIS_PASS, decode_responses=True, db=1)
+else:
+    CELERY_BROKER_URL = 'redis://%s:%s/0' % (REDIS_HOST, str(REDIS_PORT))
+    REDIS_POOL = redis.ConnectionPool(host=REDIS_HOST, port=int(REDIS_PORT), decode_responses=True,db=1)
+
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_TASK_SERIALIZER = 'json'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -71,7 +104,9 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
 }
 
 JWT_AUTH = {
@@ -147,11 +182,34 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
-# docker api 连接， 本机默认为 127.0.0.1
-# client = docker.DockerClient("tcp://127.0.0.1:2375")
-client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+# 默认启动容器最长时间为 60s，可根据实际情况调整
+DOCKER_CONTAINER_TIME = 60
+
+try:
+    # DOCKER_URL tcp://127.0.0.1:2375 or unix://var/run/docker.sock
+    # DOCKER_URL = "tcp://192.168.87.136:2375"
+    DOCKER_URL = os.environ['DOCKER_URL']
+except:
+    DOCKER_URL = "unix://var/run/docker.sock"
+
+if DOCKER_URL.startswith("unix:"):
+    client = docker.DockerClient(base_url=DOCKER_URL)
+    api_docker_client = docker.APIClient(base_url=DOCKER_URL)
+else:
+    client = docker.DockerClient(DOCKER_URL)
+    api_docker_client = docker.APIClient(base_url=DOCKER_URL)
+
+try:
+    """
+    设置 docker-compose 连接
+    """
+    os.environ['DOCKER_HOST'] = DOCKER_URL
+except Exception as e:
+    pass
+
+
 # 靶场绑定 IP，提供用户访问靶场与 Docker 服务IP保持一致。
 VUL_IP = ""
 try:
@@ -159,6 +217,9 @@ try:
         VUL_IP = os.environ['VUL_IP']
 except Exception as e:
     pass
+
+DOCKER_COMPOSE = os.path.join(BASE_DIR, "docker-compose")
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 

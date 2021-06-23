@@ -13,27 +13,39 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# from django.contrib import admin
 from django.conf.urls import url, include
 from rest_framework import routers
-from dockerapi.views import ImageInfoViewSet, ContainerVulViewSet, SysLogSet
-from user.views import UserRegView, UserSet
+from dockerapi.views import ImageInfoViewSet, ContainerVulViewSet, SysLogSet, get_setting, update_setting, TimeMoudelSet, CreateTimeTemplate, UserRank, TimeRankSet, get_timing_imgs
+from user.views import UserRegView, UserSet, get_user_rank
 from rest_framework_jwt.views import obtain_jwt_token
 from user.views import get_user_info, LogoutView
+from tasks.views import TaskSet
+from network.views import NetWorkInfoViewSet
+from layout_image.views import LayoutViewSet, upload_img
 
 router = routers.DefaultRouter()
-router.register('images', ImageInfoViewSet, base_name='Images')
-router.register('container', ContainerVulViewSet, base_name='Container')
-router.register('user/register', UserRegView, base_name='register')
-router.register('user', UserSet, base_name='user')
-router.register('syslog', SysLogSet, base_name="SysLog")
-# check_docker_status
+router.register('images', ImageInfoViewSet, basename='Images')
+router.register('container', ContainerVulViewSet, basename='Container')
+router.register('user/register', UserRegView, basename='register')
+router.register('user', UserSet, basename='user')
+router.register('syslog', SysLogSet, basename="SysLog")
+router.register('tasks', TaskSet, basename="TaskSet")
+router.register("network", NetWorkInfoViewSet, basename="network")
+router.register('layout', LayoutViewSet, basename="layout")
+router.register('time', TimeMoudelSet, basename="time")
+router.register('timetemp', CreateTimeTemplate, basename="timetmep")
+router.register('userrank', UserRank, basename="user_rank")
+router.register('timerank', TimeRankSet, basename="time_rankset")
 
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^user/login', obtain_jwt_token),
     url(r'^user/logout', LogoutView.as_view(), name="logout"),
-    url(r'user/info', get_user_info.as_view()),
+    url(r'^user/info', get_user_info.as_view()),
+    url(r'^rank/user', get_user_rank.as_view()),
+    url(r'setting/get', get_setting),
+    url(r'setting/update', update_setting),
+    url(r'img/upload', upload_img),
+    url(r'get/website/imgs', get_timing_imgs),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    #    path('admin/', admin.site.urls),
 ]

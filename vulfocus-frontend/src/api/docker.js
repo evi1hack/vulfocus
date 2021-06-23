@@ -1,12 +1,39 @@
 import request from '@/utils/request'
 
-export function ImgList(data) {
+export function ImgList(data,flag,page,temp,type,rank) {
   if(data === undefined){
     data = ""
   }
+  if(rank === undefined || rank == null){
+    rank = 0.0
+  }
+  if(type === undefined || type == null){
+    type = ""
+  }
+  if(page === undefined || page == null){
+    page =1
+  }
+  let url = "/images/?query="+data+"&page="+page+'&rank='+rank+'&type='+type
+  let paramFlag = ""
+  if(flag === true){
+    paramFlag = "flag"
+    url += "&flag="+paramFlag
+  }
+  let tempFlag =""
+  if(temp === true){
+    tempFlag = "temp"
+    url += "&temp="+tempFlag
+  }
   return request({
-    url: '/images/?query='+data,
+    url: url,
     method: 'get'
+  })
+}
+
+export function get_website_imgs() {
+  return request({
+    url: 'get/website/imgs',
+    method: 'post'
   })
 }
 
@@ -31,9 +58,12 @@ export function ContainerSTART(id) {
   })
 }
 
-export function ContainerHisory() {
+export function ContainerHisory(page) {
+  if(page === undefined || page === null || page < 1){
+    page = 1
+  }
   return request({
-    url: '/container/',
+    url: '/container/?page='+page,
     method: 'get',
   })
 }

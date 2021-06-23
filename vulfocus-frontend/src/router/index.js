@@ -70,7 +70,59 @@ export const constantRoutes = [
         meta: { title: '用户', icon: 'user', noCache: true }
       }
     ]
-  }
+  },
+  {
+    path: '/userrank',
+    component: Layout,
+    redirect: '/userrank',
+    children: [{
+      path: 'list',
+      affix: true,
+      name: 'list',
+      component: () => import('@/views/rank/index'),
+      meta: { title: '积分总榜', icon: 'form' }
+    }]
+  },
+  {
+    path: '/time',
+    component: Layout,
+    redirect: '/time',
+    children: [{
+      path: 'time',
+      affix: true,
+      name: 'list',
+      hidden: true,
+      component: () => import('@/views/time/index'),
+      meta: { title: '场景模式', icon: 'form' }
+    }]
+  },
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/',
+    children: [{
+      path: '/scene/list',
+      name: 'List',
+      component: () => import('@/views/scene/list'),
+      meta: { title: '场景', icon: 'table', noCache: true }
+    }]
+  },
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/',
+    meta: {title: "场景模式", icon: 'form'},
+    hidden: true,
+    children: [
+      {
+        path: '/scene/index',
+        component: () => import('@/views/scene/index'),
+        name: 'Index',
+        hidden: true,
+        meta: { title: '场景', icon: 'table', noCache: true }
+      },]
+  },
+
 ]
 
 const createRouter = () => new Router({
@@ -93,45 +145,86 @@ export const asyncRoutes = [
     path: '/image',
     component: Layout,
     redirect: '/image',
-    meta: {role: ['admin']},
+    meta: {role: ['admin'],title: "镜像管理", icon: 'docker'},
     children: [{
       path: 'image',
       affix: true,
       name: 'image',
       component: () => import('@/views/image/index'),
-      meta: { title: '镜像管理', icon: 'table' , role: ['admin']}
-    }]
+      meta: { title: '镜像管理', icon: 'docker' , role: ['admin']}
+    },{
+        path: 'images',
+        affix: true,
+        name: 'images',
+        component: () => import("@/views/manager/images"),
+        meta: { title: '靶场管理', icon: 'bug' , role: ['admin']}
+      }]
   },
-
+  {
+    // 环境编排管理
+    path: '/layout',
+    component: Layout,
+    redirect: '/layout',
+    meta: {role: ['admin'], title: "场景管理", icon: "barrage_fill"},
+    children: [{
+      path: 'network',
+      affix: true,
+      name: 'network',
+      component: () => import('@/views/network/index'),
+      meta: { title: '网卡管理', icon: 'tree' , role: ['admin']}
+    },{
+      path: 'manager',
+      affix: true,
+      name: 'manager',
+      component: () => import('@/views/layout/manager'),
+      meta: { title: '环境编排管理', icon: 'barrage_fill' , role: ['admin']}
+    },
+      {
+      path: 'index',
+      affix: true,
+      name: 'index',
+      hidden: true,
+      component: () => import('@/views/layout/index'),
+      meta: { title: '创建', icon: 'barrage_fill' , role: ['admin']}
+    },
+    {
+        path: 'timetemp',
+        affix: true,
+        name: 'timetemp',
+        component: () => import("@/views/manager/timetemp"),
+        meta: { title: '计时模版管理', icon: 'setting' , role: ['admin']}
+    },
+    ]
+  },
   {
     // 账户管理
     path: '/manager',
     component: Layout,
     redirect: '/manager',
-    meta: {role: ['admin'],title: "账户管理", icon: 'table'},
+    meta: {role: ['admin'],title: "系统管理", icon: 'setting'},
     children: [
       {
-      path: 'user',
-      affix: true,
-      name: 'user',
-      component: () => import("@/views/manager/user"),
-      meta: { title: '用户信息管理', icon: 'table' , role: ['admin']}
-      },
-      {
-        path: 'images',
+        path: 'user',
         affix: true,
-        name: 'images',
-        component: () => import("@/views/manager/images"),
-        meta: { title: '使用靶场管理', icon: 'table' , role: ['admin']}
+        name: 'user',
+        component: () => import("@/views/manager/user"),
+        meta: { title: '用户管理', icon: 'user' , role: ['admin']}
       },
       {
         path: 'log',
         affix: true,
         name: 'log',
         component: () => import("@/views/manager/log"),
-        meta: { title: '操作日志记录', icon: 'table' , role: ['admin']}
-      }
-   ]
+        meta: { title: '日志管理', icon: 'log' , role: ['admin']}
+      },
+      {
+        path: 'setting',
+        component: () => import('@/views/manager/setting'),
+        name: 'setting',
+        meta: { title: '系统配置', icon: 'setting', noCache: true }
+      },
+
+    ]
   },
   { path: '*', redirect: '/404', hidden: true }
 ]
